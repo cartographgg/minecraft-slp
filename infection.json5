@@ -1,0 +1,42 @@
+{
+  "$schema"           : "vendor/infection/infection/resources/schema.json",
+  "source"            : {
+    "directories": [
+      "src"
+    ],
+    // MonotonicClock is a trivial adapter over hrtime; arithmetic mutations on the
+    // millisecond conversion cannot be killed without an end-to-end test against the
+    // system clock. Tests inject a fake `Clock` instead.
+    "excludes"   : [
+      "MonotonicClock.php"
+    ]
+  },
+  "staticAnalysisTool": "phpstan",
+  "logs"              : {
+    "text": "build/infection.txt",
+    "html": "build/infection.html"
+  },
+  "mutators"          : {
+    "@default"         : true,
+    // `$errno`/`$errstr` are populated by `stream_socket_client` via reference. Their initial
+    // values are dead, and PHPStan's stubs require the `?? 0`/`?? ''` fallbacks because the
+    // parameters are typed nullable. Both produce equivalent mutants no test can distinguish.
+    "DecrementInteger" : {
+      "ignoreSourceCodeByRegex": [
+        "\\$errno  = 0;",
+        ".*\\$errno \\?\\? 0.*",
+        // `* 999999` vs `* 1_000_000` shifts the microseconds value by 1 microsec, undetectable
+        // by any timing-based test. Equivalent mutant.
+        ".*\\$timeout - \\$whole.*1_000_000.*"
+      ]
+    },
+    "IncrementInteger" : {
+      "ignoreSourceCodeByRegex": [
+        ".*\\$errno \\?\\? 0.*",
+        // `* 1000001` vs `* 1_000_000` shifts the microseconds value by 1 microsec, undetectable
+        // by any timing-based test. Equivalent mutant.
+        ".*\\$timeout - \\$whole.*1_000_000.*"
+      ]
+    }
+  }
+}

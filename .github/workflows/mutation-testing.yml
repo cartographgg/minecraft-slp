@@ -1,0 +1,36 @@
+name: Mutation Testing
+
+on:
+  pull_request:
+  schedule:
+    - cron: '0 2 * * *'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  infection:
+    name: Infection
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft != true
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          extensions: zlib
+          coverage: xdebug
+          tools: composer
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress
+
+      - name: Run mutation testing
+        run: composer mutation -- --no-progress --min-msi=100 --min-covered-msi=100

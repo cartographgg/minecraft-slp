@@ -1,0 +1,50 @@
+{
+  "name"             : "cartograph/minecraft-slp",
+  "description"      : "Minecraft Server List Ping protocol implementation in PHP, with composable packet DTOs for custom flows.",
+  "type"             : "library",
+  "license"          : "MIT",
+  "keywords"         : [
+    "minecraft",
+    "slp",
+    "server-list-ping",
+    "protocol"
+  ],
+  "homepage"         : "https://github.com/cartographgg/minecraft-slp",
+  "support"          : {
+    "issues": "https://github.com/cartographgg/minecraft-slp/issues",
+    "source": "https://github.com/cartographgg/minecraft-slp"
+  },
+  "require"          : {
+    "php": "^8.5"
+  },
+  "require-dev"      : {
+    "brianium/paratest"        : "^7.22",
+    "friendsofphp/php-cs-fixer": "^3.95",
+    "infection/infection"      : "^0.32",
+    "phpstan/phpstan"          : "^2.0",
+    "phpunit/phpunit"          : "^13"
+  },
+  "autoload"         : {
+    "psr-4": {
+      "Cartograph\\SLP\\": "src/"
+    }
+  },
+  "autoload-dev"     : {
+    "psr-4": {
+      "Cartograph\\SLP\\Tests\\": "tests/"
+    }
+  },
+  "config"           : {
+    "sort-packages": true,
+    "allow-plugins": {
+      "infection/extension-installer": true
+    }
+  },
+  "scripts"          : {
+    "test"    : "@php ./vendor/bin/paratest --no-coverage",
+    "mutation": "@php ./vendor/bin/infection --threads=max",
+    "static"  : "@php ./vendor/bin/phpstan analyse --memory-limit=1G",
+    "style"   : "@php ./vendor/bin/php-cs-fixer fix"
+  },
+  "minimum-stability": "stable"
+}
