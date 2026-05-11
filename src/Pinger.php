@@ -172,7 +172,7 @@ final class Pinger
     {
         $ctx->connection->send(new Handshake(
             protocolVersion: $ctx->protocolVersion,
-            serverAddress: $ctx->endpoint->host,
+            serverAddress: $ctx->address,
             serverPort: $ctx->endpoint->port,
             nextState: NextState::Status,
         ));

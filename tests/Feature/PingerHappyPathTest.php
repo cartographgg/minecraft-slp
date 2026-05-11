@@ -62,9 +62,11 @@ final class PingerHappyPathTest extends TestCase
         $this->assertSame(5, $outcome->result->players->online);
         $this->assertSame('Example Server', $outcome->result->description->plainText);
 
-        // Verify exact bytes were sent: Handshake(-1, '10.0.0.5', 25565, Status), StatusRequest, Ping(t)
+        // Verify exact bytes were sent: Handshake(-1, 'play.example.com', 25565, Status), StatusRequest, Ping(t).
+        // The handshake echoes the caller's original address, not the resolved IP — proxies (BungeeCord,
+        // Velocity, TCPShield) route on this field, so substituting the post-DNS IP would defeat virtual hosting.
         $expectedHandshakePayload = VarInt::encode(-1)
-            . McString::encode('10.0.0.5')
+            . McString::encode('play.example.com')
             . UnsignedShort::encode(25565)
             . VarInt::encode(1);
         $expectedHandshakeInner = VarInt::encode(0x00) . $expectedHandshakePayload;
