@@ -206,11 +206,11 @@ final class JsonStatusDecoder implements StatusDecoder
         $raw = $decoded['description'] ?? '';
 
         if (is_string($raw)) {
-            return new Description(raw: $raw, plainText: $raw);
+            return new Description(raw: $raw, plainText: $this->stripFormattingCodes($raw));
         }
 
         if (is_array($raw)) {
-            return new Description(raw: $raw, plainText: $this->flattenComponentTree($raw));
+            return new Description(raw: $raw, plainText: $this->stripFormattingCodes($this->flattenComponentTree($raw)));
         }
 
         return new Description(raw: '', plainText: '');
@@ -239,6 +239,16 @@ final class JsonStatusDecoder implements StatusDecoder
         }
 
         return $out;
+    }
+
+    /**
+     * Strip Minecraft legacy formatting codes (§ followed by a character) from the given string.
+     *
+     * Handles BungeeCord hex sequences (§x§R§R§G§G§B§B) and standard single-character codes.
+     */
+    private function stripFormattingCodes(string $text): string
+    {
+        return preg_replace('/§x(?:§[0-9a-fA-F]){6}|§./u', '', $text) ?? $text;
     }
 
     /**

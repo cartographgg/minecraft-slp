@@ -122,6 +122,78 @@ final class JsonStatusDecoderEdgeCasesTest extends TestCase
         $this->assertSame('Hello', $result->description->plainText);
     }
 
+    public function testLegacyStringDescriptionStripsFormattingCodes(): void
+    {
+        $json = json_encode([
+            'version'     => ['name' => '1.20', 'protocol' => 763],
+            'players'     => ['online' => 0, 'max' => 0],
+            'description' => '§aA §bMinecraft §r§lServer',
+        ], JSON_THROW_ON_ERROR);
+
+        $result = new JsonStatusDecoder()->decode($json, latencyMs: null);
+
+        $this->assertSame('§aA §bMinecraft §r§lServer', $result->description->raw);
+        $this->assertSame('A Minecraft Server', $result->description->plainText);
+    }
+
+    public function testComponentTreeStripsFormattingCodesFromTextNodes(): void
+    {
+        $json = json_encode([
+            'version'     => ['name' => '1.20', 'protocol' => 763],
+            'players'     => ['online' => 0, 'max' => 0],
+            'description' => [
+                'text'  => '§aHello ',
+                'extra' => [
+                    ['text' => '§bWorld'],
+                ],
+            ],
+        ], JSON_THROW_ON_ERROR);
+
+        $result = new JsonStatusDecoder()->decode($json, latencyMs: null);
+
+        $this->assertSame('Hello World', $result->description->plainText);
+    }
+
+    public function testStripsBungeeCordHexFormattingCodes(): void
+    {
+        $json = json_encode([
+            'version'     => ['name' => '1.20', 'protocol' => 763],
+            'players'     => ['online' => 0, 'max' => 0],
+            'description' => '§x§F§F§0§0§0§0Red§r Normal',
+        ], JSON_THROW_ON_ERROR);
+
+        $result = new JsonStatusDecoder()->decode($json, latencyMs: null);
+
+        $this->assertSame('Red Normal', $result->description->plainText);
+    }
+
+    public function testStripsAllFormattingCodeTypes(): void
+    {
+        $json = json_encode([
+            'version'     => ['name' => '1.20', 'protocol' => 763],
+            'players'     => ['online' => 0, 'max' => 0],
+            'description' => '§0§1§2§3§4§5§6§7§8§9§a§b§c§d§e§f§k§l§m§n§o§rClean',
+        ], JSON_THROW_ON_ERROR);
+
+        $result = new JsonStatusDecoder()->decode($json, latencyMs: null);
+
+        $this->assertSame('Clean', $result->description->plainText);
+    }
+
+    public function testPlainDescriptionWithoutFormattingCodesIsUnchanged(): void
+    {
+        $json = json_encode([
+            'version'     => ['name' => '1.20', 'protocol' => 763],
+            'players'     => ['online' => 0, 'max' => 0],
+            'description' => 'Just a plain server',
+        ], JSON_THROW_ON_ERROR);
+
+        $result = new JsonStatusDecoder()->decode($json, latencyMs: null);
+
+        $this->assertSame('Just a plain server', $result->description->plainText);
+        $this->assertSame('Just a plain server', $result->description->raw);
+    }
+
     public function testForgeDataMalformedModEntriesAreSkipped(): void
     {
         $json = json_encode([
